@@ -1,0 +1,9 @@
+#!/bin/bash
+
+echo 'Starting Server...'
+
+SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+
+nohup node "$SCRIPTPATH/../server/index.js"> logfile 2> errfile <&- &
+
+echo 'Server Started'
