@@ -45,12 +45,12 @@ const authenticateToken = (socket, next) => {
         //Get token from cookie or query string
         token = (() => {
             // return auth cookie if it exists
-            if ( request.headers.hasOwnProperty('cookie') && request.headers.cookie.indexOf('auth=') >= 0 ){
-                return request.headers.cookie.match(/[; ]?auth=([^; ]*)/)[1]
+            if ( socket.request.headers.hasOwnProperty('cookie') && request.headers.cookie.indexOf('auth=') >= 0 ){
+                return socket.request.headers.cookie.match(/[; ]?auth=([^; ]*)/)[1]
             }
             // otherwise return auth query if it exists or throw an error if it doesnt
-            return request.handshake.query.token;
-        })
+            return socket.handshake.query.token;
+        })();
         //returns decoded message if valid, otherwise throws an error
         decoded = jwt.verify(token, JWTKEY, { audience: 'PS WebSocket Server'});
 
