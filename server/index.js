@@ -39,6 +39,15 @@ app.get('/', (req, res) => {
     }
 })();
 
+function createClientToken(){
+    try {
+        return jwt.sign( {id: "Client"}, JWTKEY, { audience: "PS WebSocket Server", expiresIn:'1h'});
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+}
+
 // Authenticate jwt sent with socket handshake
 const authenticateToken = (socket, next) => {
     try {
@@ -71,6 +80,9 @@ proxyIO.on('connection', (socket) => {
     socket.send('Hello');
     // socket.on('message', (message) => console.log(message));
     if ( socket.isPhotoshop ) {
+        socket.on('Request Token', () => {
+            socket.emit('New Token', createClientToken() );
+        });
         // TODO: Set-up listeners and functions specific to the photoshop socket
     }
 });
@@ -79,6 +91,9 @@ io.on('connection', (socket) => {
     socket.send('Hello');
     socket.on('message', (message) => console.log(message));
     if ( socket.isPhotoshop ) {
+        socket.on('Request Token', () => {
+            socket.emit('New Token', createClientToken() );
+        });
         // TODO: Set-up listeners and functions specific to the photoshop socket
     }
 });
