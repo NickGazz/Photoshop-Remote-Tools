@@ -7,12 +7,21 @@ const ssl = {
 };
 const express = require('express')
 const app = express();
+const http = require('http').Server();
 const https = require('https').Server({key: ssl.key, cert: ssl.cert}, app);
-const io = require('socket.io')(https);
+const socketServer = require('socket.io');
 require('dotenv').config(__dirname+'/.env');
 const PORT = process.env.PORT || 8000;
 const jwt = require('jsonwebtoken');
 const JWTKEY = process.env.JWTKEY || 'my_secret_key';
+
+// SSL server for remote client controlling photoshop
+const io = new socketServer(https);
+// Proxy server added to support photoshop's inability to connect 
+const proxyIO = new socketServer(http);
+
+proxyIO.on('connection', (socket) => {
+});
 
 app.get('/', (req, res) => {
     res.send('<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.dev.js"></script>');
@@ -56,6 +65,15 @@ const authenticateToken = (socket, next) => {
 }
 
 io.use( authenticateToken );
+proxyIO.use( authenticateToken );
+
+proxyIO.on('connection', (socket) => {
+    socket.send('Hello');
+    // socket.on('message', (message) => console.log(message));
+    if ( socket.isPhotoshop ) {
+        // TODO: Set-up listeners and functions specific to the photoshop socket
+    }
+});
 
 io.on('connection', (socket) => {
     socket.send('Hello');
@@ -68,4 +86,7 @@ io.on('connection', (socket) => {
 
 https.listen(PORT, ()=>{
     console.log('listening on port ' + PORT);
+});
+http.listen(8001, () => {
+    console.log('listening on port 8001');
 });
