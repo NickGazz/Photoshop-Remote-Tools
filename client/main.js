@@ -4,13 +4,10 @@ var csInterface = new CSInterface();
 path = csInterface.getSystemPath(SystemPath.EXTENSION);
 csInterface.evalScript("new File('"+path+"/host/start_server').execute()");
 
-let auth = window.cep.fs.readFile(path+'/client-ps/jwt').data;
+let auth = window.cep.fs.readFile(path+'/client/jwt').data;
 
-ws = new WebSocket('ws://127.0.0.1:8006/?auth='+auth);
+const ws = io.connect('ws://192.168.1.146:8001', { query: { token: auth } });
 
-ws.onmessage = (message) => {
-    alert(message.data);
-}
 
 ws.send('Hi');
 ws.emit('customeEvent', 'This is a test event');
