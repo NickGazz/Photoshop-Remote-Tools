@@ -12,8 +12,11 @@ const https = require('https').Server({key: ssl.key, cert: ssl.cert}, app);
 const socketServer = require('socket.io');
 require('dotenv').config(__dirname+'/.env');
 const PORT = process.env.PORT || 8000;
-const jwt = require('jsonwebtoken');
-const JWTKEY = process.env.JWTKEY || 'my_secret_key';
+const crypto = require('crypto');
+
+let nonces = [];
+const psNonce = crypto.randomBytes(16).toString('base64');
+fs.writeFile(__dirname+'/../client/auth_token', psNonce, (err) => { if (err) throw err; } );
 
 // SSL server for remote client controlling photoshop
 const io = new socketServer(https);
@@ -27,28 +30,7 @@ app.get('/', (req, res) => {
     res.send('<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.dev.js"></script>');
 });
 
-// Create jwt and save to client folder for photoshop to use for auth
-(() => {
-    try {
-        jwt.sign( {id: "Photoshop Host"}, JWTKEY, { audience: "PS WebSocket Server", expiresIn:'1h'}, (err, token) => {
-            if (err) throw err;
-            fs.writeFile(__dirname+'/../client/jwt', token, (err) => { if (err) throw err; } );
-        });
-    } catch (error) {
-        console.log(error)    ;
-    }
-})();
-
-function createClientToken(){
-    try {
-        return jwt.sign( {id: "Client"}, JWTKEY, { audience: "PS WebSocket Server", expiresIn:'1h'});
-    } catch (error) {
-        console.log(error);
-        return false;
-    }
-}
-
-// Authenticate jwt sent with socket handshake
+// Authenticate token sent with socket handshake
 const authenticateToken = (socket, next) => {
     try {
         //Get token from cookie or query string
@@ -59,12 +41,10 @@ const authenticateToken = (socket, next) => {
             }
             // otherwise return auth query if it exists or throw an error if it doesnt
             return socket.handshake.query.token;
-        })();
-        //returns decoded message if valid, otherwise throws an error
-        decoded = jwt.verify(token, JWTKEY, { audience: 'PS WebSocket Server'});
-
-        // Create isPhotoshop propery on sokcet and set to true if the jwt id is photoshop
-        socket.isPhotoshop = (decoded.id === 'Photoshop Host');
+        })();        
+        if ( !nonces.includes(token) && token !== psNonce ) throw Error('invalid token');
+        // Create isPhotoshop propery on sokcet and set to true if the nonce is the one used for photoshop
+        socket.isPhotoshop = (token === psNonce);
         next();
     } catch (error) {
         console.log(error);
@@ -81,7 +61,9 @@ proxyIO.on('connection', (socket) => {
     // socket.on('message', (message) => console.log(message));
     if ( socket.isPhotoshop ) {
         socket.on('Request Token', () => {
-            socket.emit('New Token', createClientToken() );
+            let nonce = crypto.randomBytes(16).toString('base64');
+            nonces.push(nonce);            
+            socket.emit('New Token', nonce );
         });
         // TODO: Set-up listeners and functions specific to the photoshop socket
     }
