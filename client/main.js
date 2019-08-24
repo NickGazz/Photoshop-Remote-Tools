@@ -15,3 +15,27 @@ ws.on('New Token', (token) => {
     qr.make();
     document.getElementById('placeHolder').innerHTML = qr.createImgTag();
 });
+
+const extensionId = csInterface.getExtensionID();
+
+const eventSelect = 1936483188;
+
+const registeredEvents = [eventSelect];
+
+function Initialize(){
+    try {
+        const registerEvent = new CSEvent("com.adobe.PhotoshopRegisterEvent", "APPLICATION");
+        registerEvent.extensionId = extensionId;
+        registerEvent.data = registeredEvents.toString();
+        csInterface.dispatchEvent(registerEvent);
+
+    } catch (e) {
+        alert(e);
+    }
+}
+
+csInterface.addEventListener("com.adobe.PhotoshopJSONCallback" + extensionId, event => {
+    ws.emit('Tool Change', event);
+});
+
+Initialize();
