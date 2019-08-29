@@ -61,10 +61,11 @@ function socketConnection(socket){
             nonces.push(nonce);            
             socket.emit('New Token', nonce );
         });
-        // TODO: Set-up listeners and functions specific to the photoshop socket
     }
+    socket.on('Tool Change', data => {
+        io.emit('Tool Change', data);
+        proxyIO.emit('Tool Change', data);
     });
-
 }
 
 proxyIO.on('connection', socketConnection);
