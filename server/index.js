@@ -23,9 +23,6 @@ const io = new socketServer(https);
 // Proxy server added to support photoshop's inability to connect 
 const proxyIO = new socketServer(http);
 
-proxyIO.on('connection', (socket) => {
-});
-
 app.get('/', (req, res) => {
     res.send('<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.dev.js"></script>');
 });
@@ -56,29 +53,28 @@ const authenticateToken = (socket, next) => {
 io.use( authenticateToken );
 proxyIO.use( authenticateToken );
 
-proxyIO.on('connection', (socket) => {
-    socket.send('Hello');
-    // socket.on('message', (message) => console.log(message));
+function socketConnection(socket){
+
     if ( socket.isPhotoshop ) {
+        console.log('Connected to Photoshop Socket');
+
         socket.on('Request Token', () => {
             let nonce = crypto.randomBytes(16).toString('base64');
             nonces.push(nonce);            
             socket.emit('New Token', nonce );
         });
-        // TODO: Set-up listeners and functions specific to the photoshop socket
+    } else {
+        console.log('Connected to remote socket');
+        
     }
-});
+    socket.on('Tool Change', data => {
+        io.emit('Tool Change', data);
+        proxyIO.emit('Tool Change', data);
+    });
+}
 
-io.on('connection', (socket) => {
-    socket.send('Hello');
-    socket.on('message', (message) => console.log(message));
-    if ( socket.isPhotoshop ) {
-        socket.on('Request Token', () => {
-            socket.emit('New Token', createClientToken() );
-        });
-        // TODO: Set-up listeners and functions specific to the photoshop socket
-    }
-});
+proxyIO.on('connection', socketConnection);
+io.on('connection', socketConnection);
 
 
 https.listen(PORT, ()=>{
