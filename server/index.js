@@ -56,11 +56,16 @@ proxyIO.use( authenticateToken );
 function socketConnection(socket){
 
     if ( socket.isPhotoshop ) {
+        console.log('Connected to Photoshop Socket');
+
         socket.on('Request Token', () => {
             let nonce = crypto.randomBytes(16).toString('base64');
             nonces.push(nonce);            
             socket.emit('New Token', nonce );
         });
+    } else {
+        console.log('Connected to remote socket');
+        
     }
     socket.on('Tool Change', data => {
         io.emit('Tool Change', data);
