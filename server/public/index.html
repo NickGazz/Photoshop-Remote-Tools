@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.dev.js"></script>
+</head>
+<body>
+    <style>
+        #tools img{
+            width: 40px;
+        }
+    </style>
+    <button id="connect">Connect</button>
+    <div id="tools" style="display:none">
+        <img id="moveTool" src="/images/moveTool.svg" alt="">
+        <img id="marqueeRectTool" src="/images/marqueeRectTool.svg">
+        <!-- <button id="moveTool">Move</button>
+        <button id="marqueeRectTool">Select</button>
+        <button id="zoomTool">Zoom</button>
+        <button id="cropTool">Crop</button> -->
+    </div>
+    <script src="/script.js"></script>
+</body>
+</html>
