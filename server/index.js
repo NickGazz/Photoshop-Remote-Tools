@@ -1,85 +1,59 @@
 'user strict';
 
-const fs = require('fs');
-const ssl = {
-    key: fs.readFileSync(__dirname + '/sslcert/ssl.key'),
-    cert: fs.readFileSync(__dirname + '/sslcert/ssl.cert')
-};
 const express = require('express')
 const app = express();
 const http = require('http').Server();
-const https = require('https').Server({key: ssl.key, cert: ssl.cert}, app);
-const socketServer = require('socket.io');
+const SocketIO = require('socket.io');
 require('dotenv').config(__dirname+'/.env');
+
 const PORT = process.env.PORT || 8000;
-const crypto = require('crypto');
 
-let nonces = [];
-const psNonce = crypto.randomBytes(16).toString('base64');
-fs.writeFile(__dirname+'/../client/auth_token', psNonce, (err) => { if (err) throw err; } );
-
-// SSL server for remote client controlling photoshop
-const io = new socketServer(https);
-// Proxy server added to support photoshop's inability to connect 
-const proxyIO = new socketServer(http);
+const io = new SocketIO( app.listen(PORT, ()=>{
+    console.log(`Listening on Port: ${PORT}`);
+}));
 
 app.get('/', (req, res) => {
     res.send('<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.dev.js"></script>');
 });
 
-// Authenticate token sent with socket handshake
-const authenticateToken = (socket, next) => {
-    try {
-        //Get token from cookie or query string
-        token = (() => {
-            // return auth cookie if it exists
-            if ( socket.request.headers.hasOwnProperty('cookie') && request.headers.cookie.indexOf('auth=') >= 0 ){
-                return socket.request.headers.cookie.match(/[; ]?auth=([^; ]*)/)[1]
-            }
-            // otherwise return auth query if it exists or throw an error if it doesnt
-            return socket.handshake.query.token;
-        })();        
-        if ( !nonces.includes(token) && token !== psNonce ) throw Error('invalid token');
-        // Create isPhotoshop propery on sokcet and set to true if the nonce is the one used for photoshop
-        socket.isPhotoshop = (token === psNonce);
-        next();
-    } catch (error) {
-        console.log(error);
-        // if token doesn't exists or is invalid disconnect the socket
-        socket.disconnect();
+class Room{
+    constructor(user, passphrase, socket, isPS = false){
+        this.room = user;
+        this.passphrase = passphrase;
+        this.sockets = [socket];
+        this.photoshopConnected = isPS;
+        this.currentTool = undefined;
     }
 }
+let rooms = {}
 
-io.use( authenticateToken );
-proxyIO.use( authenticateToken );
-
-function socketConnection(socket){
-
-    if ( socket.isPhotoshop ) {
-        console.log('Connected to Photoshop Socket');
-
-        socket.on('Request Token', () => {
-            let nonce = crypto.randomBytes(16).toString('base64');
-            nonces.push(nonce);            
-            socket.emit('New Token', nonce );
-        });
-    } else {
-        console.log('Connected to remote socket');
-        
-    }
-    socket.on('Tool Change', data => {
-        io.emit('Tool Change', data);
-        proxyIO.emit('Tool Change', data);
+const authenticateUser = (socket) => new Promise( (resolve,reject) =>{
+    socket.once('authenticate', data => {
+        const {user, pass, isPS} = data;
+        if ( !rooms.hasOwnProperty(user) ){
+            rooms[user] = new Room(user, pass, socket)
+        } else if ( pass !== rooms[user].passphrase ){
+            reject('Invalid credentials')
+        } else {
+            rooms[user].sockets.push(socket);
+        }
+        resolve(user);
     });
-}
-
-proxyIO.on('connection', socketConnection);
-io.on('connection', socketConnection);
-
-
-https.listen(PORT, ()=>{
-    console.log('listening on port ' + PORT);
+    // Reject auth after 2 minutes without a response
+    setTimeout(() => {reject('Auth timed out');}, 120000);
 });
-http.listen(8001, () => {
-    console.log('listening on port 8001');
+
+io.on('connection', async socket => {
+    console.log('Client connected');
+    socket.on('disconnect', () => console.log('Client disconnected'));
+
+    // wait for user to send auth credentials before allowing connection;
+    let room = await authenticateUser(socket).then(room => room)
+        .catch(err => { socket.disconnect(true); });
+
+    socket.join(room);
+    socket.on('Tool Change', tool => {
+        socket.to(room).emit('Tool Change', tool);
+    });
+
 });
