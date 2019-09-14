@@ -11,9 +11,7 @@ const io = new SocketIO( app.listen(PORT, ()=>{
     console.log(`Listening on Port: ${PORT}`);
 }));
 
-app.get('/', (req, res) => {
-    res.send('<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.dev.js"></script>');
-});
+app.use(express.static('public'));
 
 class Room{
     constructor(user, passphrase, socket, isPS = false){
