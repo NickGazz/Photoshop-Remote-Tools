@@ -50,6 +50,7 @@ io.on('connection', async socket => {
     let room = await authenticateUser(socket).then(room => room)
         .catch(err => { socket.disconnect(true); });
 
+    socket.emit('authenticated');
     socket.join(room);
     socket.on('Tool Change', tool => {
         socket.to(room).emit('Tool Change', tool);
