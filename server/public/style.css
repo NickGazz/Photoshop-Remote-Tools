@@ -1,16 +1,16 @@
-.tool-button{
+#tools > svg{
     width: 50px;
     border-radius: 8px;
     background: white;
 }
 
-.tool-button:hover{
+#tools > svg:hover{
     box-shadow: 2px 2px 4px rgba(0, 0, 0, .2);
     /* background: #d8d8d8; */
     filter: brightness(80%)
 }
 
-.tool-button.selected{
+#tools > svg.selected{
     /* background: #888; */
     filter: brightness(60%);
 }
