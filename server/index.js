@@ -2,7 +2,6 @@
 
 const express = require('express')
 const app = express();
-const http = require('http').Server();
 const SocketIO = require('socket.io');
 require('dotenv').config(__dirname+'/.env');
 

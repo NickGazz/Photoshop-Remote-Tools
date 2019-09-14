@@ -5,14 +5,14 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npx nodemon index.js"
+    "start": "node ./index.js",
+    "dev": "npx nodemon index.js"
   },
   "author": "nickgazzillo@gmail.com",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^8.1.0",
     "express": "^4.17.1",
-    "jsonwebtoken": "^8.5.1",
     "socket.io": "^2.2.0"
   }
 }
