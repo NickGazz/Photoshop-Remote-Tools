@@ -34,7 +34,7 @@
         <UI>
           <Type>Panel</Type>
           <!-- 6) -->
-          <Menu>My First Panel</Menu>
+          <Menu>Remote Tools</Menu>
           <Geometry>
             <Size>
 							<Height>200</Height>

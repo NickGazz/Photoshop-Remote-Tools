@@ -1,18 +1,56 @@
 var csInterface = new CSInterface();
 
-// Start server 
-path = csInterface.getSystemPath(SystemPath.EXTENSION);
-csInterface.evalScript("new File('"+path+"/host/start_server').execute()");
+const extensionId = csInterface.getExtensionID();
 
-let auth = window.cep.fs.readFile(path+'/client-ps/jwt').data;
+const eventSelect = 1936483188;
 
-ws = new WebSocket('ws://127.0.0.1:8006/?auth='+auth);
+const registeredEvents = [eventSelect];
 
-ws.onmessage = (message) => {
-    alert(message.data);
+function Initialize(){
+    try {
+        const registerEvent = new CSEvent("com.adobe.PhotoshopRegisterEvent", "APPLICATION");
+        registerEvent.extensionId = extensionId;
+        registerEvent.data = registeredEvents.toString();
+        csInterface.dispatchEvent(registerEvent);
+    } catch (e) {
+        alert(e);
+    }
 }
 
-ws.send('Hi');
-ws.emit('customeEvent', 'This is a test event');
+function socketEvents(socket){
+    csInterface.addEventListener("com.adobe.PhotoshopJSONCallback" + extensionId, event => {
+        let data = JSON.parse(event.data.replace('ver1,', ''));
+        let tool = data.eventData.null._ref;
+        socket.emit('Tool Change', tool);
+    });
+    
+    socket.on('Tool Change', test => {
+        csInterface.evalScript(`app.currentTool='${test}'`);
+    });
+}
 
-ws.emit('message', 'Test message');
+document.querySelector('#credentials-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    formFields = e.target.children;
+    const socket = io.connect('ws://photoshop-remote-tools.herokuapp.com');
+    socket.on('connect', () =>{
+        socket.emit('authenticate', {
+            user: formFields.user.value,
+            pass: formFields.pass.value,
+            isPS: true
+        });
+        socket.once('authenticated', () =>{
+            csInterface.evalScript(`app.currentTool`, (tool) => {
+                socket.emit('Tool Change', tool);
+            });
+            // Remove connect form once authenticated
+            e.target.style.display = 'none';
+            socket.on('dissconnect', () => {
+                e.target.style.display = '';
+            });
+            socketEvents(socket);
+        });
+    });
+});
+
+Initialize();
