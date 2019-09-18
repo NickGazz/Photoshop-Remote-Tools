@@ -1,3 +1,57 @@
+body{
+    margin: 0;
+}
+
+#login-bg{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+
+    background-image: url('images/login-bg.jpg');
+    background-size: cover;
+}
+
+#credentials-form{
+    background: #f7f7f7;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, .4);
+}
+#credentials-form input{
+    display: block;
+    font-size: 17px;
+}
+#credentials-form input[type="text"]{
+    margin: 15px;
+    padding: 5px 10px;
+    background: none;
+    color: #859099;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #a2adb6;
+}
+#credentials-form input[type="text"]:focus{
+    border-bottom: 2px solid #84bfe8;
+}
+#credentials-form input[type="submit"]{
+    background: linear-gradient(#a0c1de, #7293c5);
+    padding: 8px 32px;
+    color: white;
+    border: none;
+    width: 80%;
+    max-width: calc( 100% - 20px );
+    box-sizing: border-box;
+    margin: 20px auto 0;
+    cursor: pointer;
+}
+
 #tools > svg{
     width: 50px;
     border-radius: 8px;
