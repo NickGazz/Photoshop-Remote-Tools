@@ -46,7 +46,10 @@ io.on('connection', async socket => {
 
     // wait for user to send auth credentials before allowing connection;
     let room = await authenticateUser(socket).then(room => room)
-        .catch(err => { socket.disconnect(true); });
+        .catch((err) => {
+            socket.emit('invalid');
+            socket.disconnect(true);
+        });
 
     socket.emit('authenticated');
     socket.join(room);
