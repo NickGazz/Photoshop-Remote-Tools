@@ -40,6 +40,7 @@ document.querySelector('#credentials-form').addEventListener('submit', (e) => {
             isPS: true
         });
         socket.once('authenticated', () =>{
+            document.querySelector('#credentials-form .invalid').style.display = 'none';
             csInterface.evalScript(`app.currentTool`, (tool) => {
                 socket.emit('Tool Change', tool);
             });
@@ -49,6 +50,9 @@ document.querySelector('#credentials-form').addEventListener('submit', (e) => {
                 e.target.style.display = '';
             });
             socketEvents(socket);
+        });
+        socket.once('invalid', () =>{
+            document.querySelector('#credentials-form .invalid').style.display = '';
         });
     });
 });
