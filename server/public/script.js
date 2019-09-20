@@ -41,13 +41,17 @@ document.querySelector('#credentials-form').addEventListener('submit', e => {
             user: formFields.user.value,
             pass: formFields.pass.value
         });
-        socket.on('authenticated', ()=>{
-            e.target.style.display = 'none';
+        socket.once('authenticated', ()=>{
+            document.querySelector('#login-bg .invalid').style.display = 'none';
+            document.querySelector('#login-bg').style.display = 'none';
             socket.on('dissconnect', () => {
-                e.target.style.display = '';
+                document.querySelector('#login-bg').style.display = '';
             });
             // displayTools();
             main(socket);
+        });
+        socket.on('invalid', ()=>{
+            document.querySelector('#login-bg .invalid').style.display = '';
         });
     });
 });

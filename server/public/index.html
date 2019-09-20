@@ -9,11 +9,14 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <form id="credentials-form">
-        <input type="text" name="user">
-        <input type="text" name="pass">
-        <input type="submit" value="Connect">
-    </form>
+    <div id="login-bg">
+        <form id="credentials-form">
+            <p class="invalid" style="display: none">Incorrect Passphrase</p>
+            <input type="text" name="user" placeholder="username" required>
+            <input type="text" name="pass" placeholder="passphrase" required>
+            <input type="submit" value="Connect">
+        </form>
+    </div>
     <div id="tools" style="display:none">
     </div>
     <script src="/script.js"></script>
